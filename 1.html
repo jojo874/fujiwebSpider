@@ -1,0 +1,778 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+  <head>
+    <title>Fuji Accessory Web</title>
+	<link rel="shortcut icon" href="Img/favicon.ico" type="image/vnd.microsoft.icon">
+	<link rel="icon" href="Img/favicon.ico" type="image/vnd.microsoft.icon">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge" >
+    <meta name="GENERATOR" Content="Microsoft Visual Studio 7.0">
+    <meta name="CODE_LANGUAGE" Content="C#">
+    <meta name="vs_defaultClientScript" content="JavaScript">
+    <meta name="vs_targetSchema" content="http://schemas.microsoft.com/intellisense/ie5">
+	<link rel="stylesheet" href="./Global.css" type="text/css">
+<script type="text/javascript" src="js/jquery/jquery.min.js"></script>
+
+<link rel="stylesheet" type="text/css" href="js/DateTimePicker/jquery.datetimepicker.css"/ >
+<script type="text/javascript" src="js/DateTimePicker/jquery.datetimepicker.js"></script>
+	
+	<link rel="stylesheet" type="text/css" href="js/jquery.countdown/css/jquery.countdown.css">
+	<script type="text/javascript" src="js/jquery.countdown/js/jquery.plugin.js"></script> 
+	<script type="text/javascript" src="js/jquery.countdown/js/jquery.countdown.min.js"></script>
+
+<link rel="stylesheet" type="text/css" href="EventLog.css"/ >
+
+<script type="text/javascript">
+	$(function () {
+		$('#dtPickerFrom').datetimepicker({
+			format: 'Y-m-d H:i',
+			onShow: function (ct) {
+				// 巜掕壜擻擔偼To傑偱
+				var strTo = jQuery('#dtPickerTo').val().split(" ")[0].replace(/-/g, "/");
+				this.setOptions({
+					maxDate: jQuery('#dtPickerTo').val() ? strTo : false
+				})
+			}
+		});
+		$('#dtPickerTo').datetimepicker({
+			format: 'Y-m-d H:i',
+			onShow: function (ct) {
+				// 巜掕壜擻擔偼From偐傜崱擔傑偱
+				var strFrom = jQuery('#dtPickerFrom').val().split(" ")[0].replace(/-/g, "/");
+				myD = new Date();
+				myYear = myD.getFullYear();
+				myMonth = myD.getMonth() + 1;
+				myDate = myD.getDate();
+				this.setOptions({
+					minDate: jQuery('#dtPickerFrom').val() ? strFrom : false,
+					maxDate: myYear + "/" + myMonth + "/" + myDate
+				})
+			}
+		});
+	});
+</script>
+
+<script type="text/javascript">
+$(function () {
+	var interval=600*1000;
+    // 僞僀儅乕僙僢僩
+	setTimer();
+	function setTimer(){
+		timerId=setTimeout(timeProcess,interval);
+		$('#countdown').countdown({until: +600, format: 'MS', layout: '{mn}{sep}{snn}'}); 
+		return false;
+	}
+	// 僞僀儅乕張棟
+	// 峏怴儃僞儞傪墴偡
+	function timeProcess(){
+		document.getElementById('LinkButtonRefresh').click();
+		timerId=setTimeout(arguments.callee,interval);
+	}
+	// 僇僂儞僩僟僂儞僋儕僢僋偱帺摦峏怴掆巭
+	$('#countdown').on('click', function (event) {
+		$('#countdown').css('visibility', 'hidden');
+		$('#countdown').countdown('destroy');
+		clearTimeout(timerId);
+	});
+});
+</script>
+
+<script type="text/javascript">
+	$(document).ready(function () {
+
+		function exportTableToCSV($table, filename) {
+			var bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+			var csvData = "";
+			var $target = ["th", "td"];
+
+			for (var k = 0; k < 2; k++) {
+				var tempFind = 'tr:has(' + $target[k] + '):not(.noexport)';
+				var $rows = $table.find(tempFind),
+
+				// Temporary delimiter characters unlikely to be typed by keyboard
+				// This is to avoid accidentally splitting the actual contents
+				tmpColDelim = String.fromCharCode(11), // vertical tab character
+				tmpRowDelim = String.fromCharCode(0), // null character
+
+				// actual delimiter characters for CSV format
+				colDelim = '","',
+				rowDelim = '"\r\n"',
+
+				// Grab text from table into CSV formatted string
+				csv = '"' + $rows.map(function (i, row) {
+            		var $row = $(row),
+						$cols = $row.find($target[k]);
+
+            		return $cols.map(function (j, col) {
+            			var $col = $(col),
+							text = $col.text();
+
+            			return text.replace(/"/g, '""').replace(/^\xA0/g,''); // escape double quotes	// 愭摢偵僑儈(0xA0)偑偮偔偙偲偑偁傞偐傜徚偡
+
+            		}).get().join(tmpColDelim);
+
+				}).get().join(tmpRowDelim)
+					.split(tmpRowDelim).join(rowDelim)
+					.split(tmpColDelim).join(colDelim) + '"',
+
+				csvData = csv.length > 2 ? csvData + csv + "\r\n" : csvData;
+			}
+
+			var ua = navigator.userAgent; // 儐乕僓乕僄乕僕僃儞僩傪戙擖
+			if (ua.match("MSIE") || ua.match("Trident")) { //MSIE傑偨偼Trident偑擖偭偰偄偨傜
+				if (window.navigator.msSaveBlob) {
+					var blob = new Blob([bom,csvData], { type: "application/csv;charset=utf-8;" });
+					navigator.msSaveBlob(blob, filename);
+				}
+				else {
+					alert('This feature is available in IE10 or more');
+				}
+			}
+			else {
+				csvData = "data:application/csv;charset=utf-8," + encodeURIComponent(csvData);
+				$(this).attr({
+					"href": csvData,
+					"target": "_blank",
+					"download": filename
+				});
+			}
+		}
+
+		// This must be a hyperlink
+		$(".export").on('click', function (event) {
+			var ua = navigator.userAgent; // 儐乕僓乕僄乕僕僃儞僩傪戙擖
+			if (ua.match("MSIE") || ua.match("Trident")) { //MSIE傑偨偼Trident偑擖偭偰偄偨傜
+				if (window.navigator.msSaveBlob) {
+				}
+				else {
+					alert('This feature is available in IE10 or more');
+					return;
+				}
+			}
+			// CSV
+			if ($(this).attr('data-exporttarget') != null) {
+				var tableId = '#' + $(this).attr('data-exporttarget');
+				var exportFile = $(this).attr('data-exportfile') + '@' + $('#LabelLine').text() + '{' + $('#dtPickerFrom').val() + '}~{' + $('#dtPickerTo').val() + '}.csv';
+				exportTableToCSV.apply(this, [$(tableId), exportFile]);
+			}
+
+			// IF CSV, don't do event.preventDefault() or return false
+			// We actually need this to be a typical hyperlink
+		});
+	});
+</script>
+
+<!--[if (gte IE 10)|!(IE)]><!-->
+<script src="js/xlsx/xlsx.full.min.js"></script>
+<script src="js/xlsx/FileSaver.min.js"></script>
+<script type="text/javascript">
+	$(function () {
+		$("#dl-xlsx").css("visibility","visible");
+		$("#dl-xlsx").on('click', function (event) {
+			var wopts = {
+				bookType: 'xlsx',
+				bookSST: false,
+				type: 'binary'
+			};
+
+			var workbook = {SheetNames: [], Sheets: {}};
+
+			$('table.table-to-export').each(function (index,currentValue) {
+				// sheet_to_workbook()偺幚憰傪嶲峫偵婰弎
+				var n = currentValue.getAttribute('data-sheet-name');
+				if (!n) {
+					n = 'Sheet' + index;
+				}
+				workbook.SheetNames.push(n);
+				workbook.Sheets[n] = XLSX.utils.table_to_sheet(currentValue, wopts);
+			});
+
+			var wbout = XLSX.write(workbook, wopts);
+
+			function s2ab(s) {
+				var buf = new ArrayBuffer(s.length);
+				var view = new Uint8Array(buf);
+				for (var i = 0; i != s.length; ++i) {
+					view[i] = s.charCodeAt(i) & 0xFF;
+				}
+				return buf;
+			}
+
+			var exportfile = $('#TabTitle').text() + '@' + $('#LabelLine').text() + '{' + $('#dtPickerFrom').val() + '}~{' + $('#dtPickerTo').val() + '}.xlsx';
+
+			saveAs(new Blob([s2ab(wbout)], {type: 'application/octet-stream'}), exportfile);
+		});
+	});
+</script>
+<![endif]-->
+<script type="text/javascript">
+	function CheckInput() {
+		var re = /\d\d\d\d-\d\d-\d\d \d\d:\d\d/;
+		if (re.test(document.getElementById('dtPickerFrom').value) == false || re.test(document.getElementById('dtPickerTo').value) == false) {
+			alert('Date and time of the wrong format.\n\nExample\n2016-01-01 01:01');
+			return false;
+		}
+		return true;
+	}
+</script>
+
+<style type="text/css">
+	#TabTitle
+	{
+		font-family:'Lucida Grande','Lucida Sans Unicode',Verdana,Arial,Helvetica,sans-serif;
+		font-size:16px;
+		color:#274b6d;
+	}
+	#TabSubTitle
+	{
+		font-family:'Lucida Grande','Lucida Sans Unicode',Verdana,Arial,Helvetica,sans-serif;
+		font-size:12px;
+		color:#4d759e;
+	}
+	.ProdTab
+	{
+		position:relative;
+		width:54px;
+		font-size:x-small;
+		color:#888;
+		text-align:center;
+	}
+	.TimeButton
+	{
+		position:relative;
+		width:32px;
+	}
+	.TimeButton span
+	{
+		position: absolute;
+		bottom: 0px;
+		left: 0px;
+		width: 32px;
+		text-align: center;
+		font-size:xx-small;
+		color: black;
+	}
+</style>
+
+</head>
+  <body MS_POSITIONING="FlowLayout">
+	<form name="TactInfo" method="post" action="TactInfo.aspx?Line=A01-10-Line" id="TactInfo">
+<div>
+<input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="" />
+<input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="" />
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwUJNzkyNzQzMzk2D2QWAmYPZBYaAgEPZBYEZg8PFgIeBFRleHQFD1Byb2R1Y3Rpb24gZGF0YWRkAgMPDxYGHwAFEHdvcmtpbmcgb24gRmxleGEeCENzc0NsYXNzBQlXaGl0ZVRleHQeBF8hU0ICAmRkAgMPZBYGZg9kFhBmD2QWAmYPZBYEZg8PFgIfAAUHTG9nIG9mZmRkAgEPDxYCHgdUb29sVGlwBSpDbGljayB0aGlzIGJ1dHRvbiB0byBtaW5pbWl6ZSB0aGUgc2lkZWJhci5kZAIDD2QWAmYPZBYCZg8PFgIfAAUNRmxvb3IgTW9uaXRvcmRkAgQPZBYCZg9kFgJmDw8WBB8ABQhXYXJuaW5ncx4HVmlzaWJsZWhkZAIFD2QWAmYPZBYCZg8PFgIfAAUMRXJyb3IgU2VhcmNoZGQCBg9kFgJmD2QWAmYPDxYCHwAFLkF1dG8gQ2hhbmdlb3Zlcjxicj4mbmJzcDsmbmJzcDsoSGFuZHkgU2Nhbm5lcilkZAIMD2QWAmYPZBYCZg8PFgQfAAUPU3lzdGVtIFNldHRpbmdzHwRnZGQCDQ9kFgJmD2QWAmYPDxYCHwAFEFN0YXR1cyBSZWZlcmVuY2VkZAIRD2QWAmYPZBYCAgEPFgIeC18hSXRlbUNvdW50ZmQCAQ8WAh8EaBYCZg9kFgJmD2QWAmYPDxYCHwMFKUNsaWNrIHRoaXMgYnV0dG9uIHRvIHJlc3RvcmUgdGhlIHNpZGViYXIuZGQCAg8WAh8EaGQCBQ8PFgIfAAULQTAxLTEwLUxpbmVkZAIHDw9kFgIeBXN0eWxlBSVtYXJnaW4tbGVmdDoyOTBweDt2aXNpYmlsaXR5OnZpc2libGU7FgxmDw8WAh4ISW1hZ2VVcmwFC2ltZy9yZXcucG5nZGQCAg8PZBYCHwYFE3Zpc2liaWxpdHk6dmlzaWJsZTtkAgMPDxYCHwcFD2ltZy9mb3J3YXJkLnBuZxYCHwYFE3Zpc2liaWxpdHk6dmlzaWJsZTtkAgQPDxYCHwcFtgxkYXRhOmltYWdlL3BuZztiYXNlNjQsaVZCT1J3MEtHZ29BQUFBTlNVaEVVZ0FBQUNBQUFBQWdDQVlBQUFCemVucjBBQUFBQVhOU1IwSUFyczRjNlFBQUFBUm5RVTFCQUFDeGp3djhZUVVBQUFBSmNFaFpjd0FBRHNNQUFBN0RBY2R2cUdRQUFBUXJTVVJCVkZoSHpWWmRiMVJWRkQzVG1XazdObnpNUUJFS3JVQ2wwK21BSDdXaEZHb3hKRFVZSCtDbDBjUkVlVkRESXlFKzlra3BpTmdCQ3hxTUNpaCtWUU1rMW95RlRKM1lUTkkyTmlFVDAvZ1h5a3VmK3YyMVBPdlFjemx6NXQ0eWJVQzl5ZTdNM25mdHRkYmU1OTVKaGJDdVJDSUJNK3o3SzhuVDZYU3B4VGVUMy8raU9DNmFSVkpGaStnZEd4dURHYXl0TmtLdG9Uc20xK2k5MFFXSGkzclVGZ2ZFNzRGekFmZzcvUWljOW1Oa1pDUW45bDNmalNPOUxYaWo3Mlc4a3ptS0UzKytodmJzV3pqMTk3c3dydzZadDJlUEtReXg3R250M3BmRGRmZXZ1eWc1RzBRd0VVQ2dNd0JxS3dQaVF3RnhUc1l4Z2E2dXJwend0eFhodWU0dGFMcFpoVU8vVnVQVjI3Vm9TKy9CbTVuNkhBUE1XU2VHV1BhRTNpN0o0VXBjU01EWDVrTWdVUVR4c2RSVEJwcEZXaG40U0tEb1BSOWlUVEhFR21Pb2E0aGhkMU1jRmUxcjhNeVBtN0gzeGpZYy9HVUhEdjlXZzZPcGVJNDRrOWYvZUZiVmlTR1dQZHM3SW9qdnIwTjhpUy9XV0l2aWszNzRhWUFEVTF2OU9TT1RzOUpBcHcrbG53U3c5bElKeWkrWG9mS3JkWGo2NncySWYvOGs2bitxd1A1YlQ2a0pYK21ONWhrNGtxcFRkV0tJWlE5N3lVRXVjcEtiUVIwTy9NREFhWmx3QzNJdHhlZjlLTHRZak1obklXejVZZzIyWHcwamVuMGo5dnl3R1EwL2IxVUMranJjVytOOGIwM3V3a3M5T3hXR1dQYXdseHprSWllNVN5OEU3NjlmRHB4cmdDYWtLMy9DaDVDeGhhMWZyc1dPYTJIVWZsdXVpRG1kMTlWNG8xSmhpR1VQZS9YMDVDUjNDUTF3ZWc3c0hNRXBtWFE4MkVMd2ZCR2U2QXBpM2FlbEtQKzhUQkdSc0VaT1ZmZmRKblcrejNkWDRBWERESFBXaVhIRVpTODV5RVZPTlRtRDRqeDJ4OEFITW5sZkJyY2dWK1BUUjZGTnlET3NrS3VzdXJJZU82OUZzT3ViRFdyS21EUkRRL3hrempveHhISnlpcGRKRHE2ZW5HcnRET3B3WUdWQWlJT0xpNHRZV0Znb09PYm41K0VXSytHZ0pyVlhiV0J1Ymc1bTBGQ2hCalRXTWNCR3I2bmM2cmE0emxmQ1FjMy9sd0d2cVZpWFRuUENDMXNvanYxNUczZ1lxYjZ2Uld5OFhmZkM2VDVYQTdPenN6QkRrM2pWYlZPRjloUEg1OFY1QnBqWXpjei9jd1BhMU16TURNeHdXNitOWWE1eGJ2ZnlOdUFHV283VWZnYThUSHJ4cnNxQU9aR2JBZnN0bUo2ZWhsY3N2VjMzZndtWkxBZlc5eDVtd09UUTJFZG13Q1RrV3QwMlFMR3BxU2tuZEk5WjA5L3pOdUFHMGpXYmlFSzJBVnVjdmYrYUFTOGhzejQ1T1FremxsN3pGdlVNTUxFQk90Y2s1bjE3QTI0WTRyM3F2RmVRQVM4Q3R5T3dzWGFleldhUlRDYlIxOWVIb2FFaDlQZjNqMHJNZW1jREV4TVRzTU4rcmV6Y2ZBN01NOWM0azYrbnB3ZjhKNFRURHc0T1RvVEQ0U3FLTDJ2QXpSUnJGTE1mUXRhODhLeW5VaW1NajQ5amVIaDR1cnE2dWw2TDg3T0ZyeFZ2RmhyYWhQbm1zTFpjLzhEQUFGYy9HWTFHRzB4eFpZQS9pNFgrRks4V2w4bGs3a1Vpa1pndHpyeFN4b0dsYUphZmp5UEl2ODFOL0IrVFdOM2l2MEVQMUFBQUFBQkpSVTVFcmtKZ2dnPT1kZAIFDw8WAh8HBaYMZGF0YTppbWFnZS9wbmc7YmFzZTY0LGlWQk9SdzBLR2dvQUFBQU5TVWhFVWdBQUFDQUFBQUFnQ0FZQUFBQnplbnIwQUFBQUFYTlNSMElBcnM0YzZRQUFBQVJuUVUxQkFBQ3hqd3Y4WVFVQUFBQUpjRWhaY3dBQURzTUFBQTdEQWNkdnFHUUFBQVFnU1VSQlZGaEh6VlpiVDFSWEZON0R6QUJUNG1YRzBpb0tvbFNHWWJSVlNvb294YVlKalUwZjlJWFV4S1Qxb1RVK05vMlBQRm54VW1WVWVvbW1GN1gySWpacVVwb3BiWVpPU2lZQlVoSXphVWovQXI3d3hQMzJkWDliOXJqUG5qTTQwTFI0a2pYbnJMVy85YTF2cmIzUHlRaGhYYkZZREtiWjY4dnhrOGxrc2NVM25aMy9xamdobWtSY1diUG9HUjBkaFdtTXJkUUNMWUhmVEs2Umh5UHpHUzdXWTIyeFgvenV1K0NEdDhNTDN4a3Zob2VISGJiMzFrNGM2bW5HMGQ0MzhIN3FNRDc0ODIyMHBkL0Y2YitQdzd6YXBkK1dQcVl3eERLbnBXdXZnK3ZCWHc5UWRONFBmOHdIWDRjUHJLMEVpSE1DNG9LMFl3S2RuWjBPODdZV1lIZlhKalRlcThEclAxZmhyVjlyMEpyY2hYZFNkUTRCOUJrbmhsam1CTjRyY25ERkxzZmdhZlhBRnl1QXVDanJLUUZOSXFrRWZDeFFjTktEU0dNRWtZWUlhdXNqMk5rWVJWbmJHcng0ZXlOZXVic0ZCMzdhaG9PL1ZPTndJdW9vVHVmSUh5K3BPREhFTXFleVBZVG92bHBFRi9raURUVW8vTkFMTHdXd1lkWldQMmVsYzE0SzZQQ2crSW9QYXo4dFF1blZFcFIvdFE0djNOeUE2UGZQbys1T0dmYmQzNm82ZkxNbm5DWGdVS0pXeFlraGxqbk1KUWU1eUVsdUd1dXc0Y2NDemtpSFU1QmpLYnprUmNrbmhRaDlIc0NtTDlhZzhub1E0VnZQWXRjUEcxSC80MlpWUUY4SGU2b3p6eTN4SFhpdGU3dkNFTXNjNXBLRFhPUWtkL0ZsLzZQeHk0YWRBaWhDcXZMR1BBZ1lVOWo4NVZwc3V4RkV6YmVsaXBqZDVib2E3cFlyRExITVlhN3VucHprTHFJQWRzK0dNMXR3V2pydGo2Zmd2MVNBWnpyOVdQZFpNVXF2bFNnaUVsYkxybXEvZTA3dDc1NnVNcnhzaUtIUE9ER1o0aktYSE9RaXArcWN4dUxjOW95QWo2UnpTaHFuSUVmajBWdWhSY2c5TEpPanJQaDZQYmJmQ0dISE54dFVseEVwaG9KNHA4ODRNY1N5Y3hZdmtSd2NQVG5WMkdtc3c0YVZBQ0VPTEN3c1lINStQbStibTV1RG15MkhnelZaZThVQ1ptZG5ZUm9GNVN0QVl6TUNtSmlySzdlNFhWejd5K0ZnemFkTFFLNnVHSmRLSGJZVVZxL3BuRnpZckFua0F0cEVUeUwrVndKbVptWmdtaTZXSzI2S2RzdGp2cDJyZlo2WHpCbWc0d1pjZFFGYTFQVDBORXh6MndhOWJwOFhPMWY3V1JQSUJjeW5PTGZpZnhHZ3UyTXgrOUF5cHRlbnBxWWN6L1J0VzN5N0huMEo2YmlCN05pcUNqQzdjNXVBWHArY25BVE45blZjMzdNbVlBTk0zeWJqWk93dFdGVUI5c20zZlRZek1USGhNTDVoRXRlc3pnQWRHNkI5VFdhdXUwMkFNUlBqbG1ldTV5VWdGOGxLQktUVGFjVGpjZlQyOW1Kd2NCQjlmWDBqa245OVpnTGo0K093N1Vtak5jOEJ4MnptNjF3ZDYrN3VCditFY0FvREF3UGp3V0N3Z3NXWEZPQW1pakVXc3craExjRE9UU1FTR0JzYnc5RFEwRlJWVlZXZExzNTdNMThyTHVacldvVDVwakMyVkg1L2Z6OUhQeEVPaCt2TjRrb0F2OHY1Zm9wWGlrdWxVZzlEb1ZERUxrNi9YTnIrUld1UzkvL0N5TC9GcmZnL2VGallPZm90MkhNQUFBQUFTVVZPUks1Q1lJST1kZAIGDw9kFgIfBgUSdmlzaWJpbGl0eTpoaWRkZW47ZAIJDw8WBB4JQmFja0NvbG9yCqQBHwICCGRkAgsPDxYEHwgKRR8CAghkZAINDw8WBB8ICqQBHwICCGRkAg8PDxYEHwgKpAEfAgIIZGQCEQ8PFgQfCAqkAR8CAghkZAITDw8WBB8ICqQBHwICCGRkAhUPDxYEHwgKpAEfAgIIZGQCGQ8PFgQfCAqkAR8CAghkZAIbD2QWBGYPZBYEAgQPFgIfBQIFFgoCAQ9kFhoCAQ8PFgIfAAULQTAxLTEwLUxpbmVkZAIDDw8WAh8ABQJNMWRkAgQPFQFGVGhlIGpvYiBuYW1lIGlzIENPUFktTTUtMjA0MDAwMjEwNTcxLTEwLjEtRmlzdCBMIEZQQy1UMDEoOCs4KV9URmlzdCBMLmQCBQ8PFgIfAAUDMC4wZGQCBg8VAUZUaGUgam9iIG5hbWUgaXMgQ09QWS1NNS0yMDQwMDAyMTA1NzEtMTAuMS1GaXN0IEwgRlBDLVQwMSg4KzgpX1RGaXN0IEwuZAIHDw8WAh8ABQMwLjBkZAIIDxUBRlRoZSBqb2IgbmFtZSBpcyBDT1BZLU01LTIwNDAwMDIxMDU3MS0xMC4xLUZpc3QgTCBGUEMtVDAxKDgrOClfVEZpc3QgTC5kAgkPDxYCHwAFAzAuMGRkAgoPFQFGVGhlIGpvYiBuYW1lIGlzIENPUFktTTUtMjA0MDAwMjEwNTcxLTEwLjEtRmlzdCBMIEZQQy1UMDEoOCs4KV9URmlzdCBMLmQCCw8PFgIfAAUDMC4wZGQCDA8VAUZUaGUgam9iIG5hbWUgaXMgQ09QWS1NNS0yMDQwMDAyMTA1NzEtMTAuMS1GaXN0IEwgRlBDLVQwMSg4KzgpX1RGaXN0IEwuZAINDw8WAh8ABQMwLjBkZAIPDw8WAh8AZWRkAgIPZBYaAgEPDxYCHwBlZGQCAw8PFgIfAAUCTTJkZAIEDxUBRlRoZSBqb2IgbmFtZSBpcyBDT1BZLU01LTIwNDAwMDIxMDU3MS0xMC4xLUZpc3QgTCBGUEMtVDAxKDgrOClfVEZpc3QgTC5kAgUPDxYCHwAFAzQuMWRkAgYPFQFGVGhlIGpvYiBuYW1lIGlzIENPUFktTTUtMjA0MDAwMjEwNTcxLTEwLjEtRmlzdCBMIEZQQy1UMDEoOCs4KV9URmlzdCBMLmQCBw8PFgIfAAUDNC4xZGQCCA8VAUZUaGUgam9iIG5hbWUgaXMgQ09QWS1NNS0yMDQwMDAyMTA1NzEtMTAuMS1GaXN0IEwgRlBDLVQwMSg4KzgpX1RGaXN0IEwuZAIJDw8WAh8ABQM0LjFkZAIKDxUBRlRoZSBqb2IgbmFtZSBpcyBDT1BZLU01LTIwNDAwMDIxMDU3MS0xMC4xLUZpc3QgTCBGUEMtVDAxKDgrOClfVEZpc3QgTC5kAgsPDxYCHwAFAzQuMGRkAgwPFQFGVGhlIGpvYiBuYW1lIGlzIENPUFktTTUtMjA0MDAwMjEwNTcxLTEwLjEtRmlzdCBMIEZQQy1UMDEoOCs4KV9URmlzdCBMLmQCDQ8PFgIfAAUDNC4wZGQCDw8PFgIfAGVkZAIDD2QWGgIBDw8WAh8AZWRkAgMPDxYCHwAFAk0zZGQCBA8VAUZUaGUgam9iIG5hbWUgaXMgQ09QWS1NNS0yMDQwMDAyMTA1NzEtMTAuMS1GaXN0IEwgRlBDLVQwMSg4KzgpX1RGaXN0IEwuZAIFDw8WAh8ABQM1LjFkZAIGDxUBRlRoZSBqb2IgbmFtZSBpcyBDT1BZLU01LTIwNDAwMDIxMDU3MS0xMC4xLUZpc3QgTCBGUEMtVDAxKDgrOClfVEZpc3QgTC5kAgcPDxYCHwAFAzUuMGRkAggPFQFGVGhlIGpvYiBuYW1lIGlzIENPUFktTTUtMjA0MDAwMjEwNTcxLTEwLjEtRmlzdCBMIEZQQy1UMDEoOCs4KV9URmlzdCBMLmQCCQ8PFgIfAAUDNS4yZGQCCg8VAUZUaGUgam9iIG5hbWUgaXMgQ09QWS1NNS0yMDQwMDAyMTA1NzEtMTAuMS1GaXN0IEwgRlBDLVQwMSg4KzgpX1RGaXN0IEwuZAILDw8WAh8ABQM1LjBkZAIMDxUBRlRoZSBqb2IgbmFtZSBpcyBDT1BZLU01LTIwNDAwMDIxMDU3MS0xMC4xLUZpc3QgTCBGUEMtVDAxKDgrOClfVEZpc3QgTC5kAg0PDxYCHwAFAzUuMWRkAg8PDxYCHwBlZGQCBA9kFhoCAQ8PFgIfAGVkZAIDDw8WAh8ABQJNNGRkAgQPFQFGVGhlIGpvYiBuYW1lIGlzIENPUFktTTUtMjA0MDAwMjEwNTcxLTEwLjEtRmlzdCBMIEZQQy1UMDEoOCs4KV9URmlzdCBMLmQCBQ8PFgIfAAUDMy45ZGQCBg8VAUZUaGUgam9iIG5hbWUgaXMgQ09QWS1NNS0yMDQwMDAyMTA1NzEtMTAuMS1GaXN0IEwgRlBDLVQwMSg4KzgpX1RGaXN0IEwuZAIHDw8WAh8ABQM0LjFkZAIIDxUBRlRoZSBqb2IgbmFtZSBpcyBDT1BZLU01LTIwNDAwMDIxMDU3MS0xMC4xLUZpc3QgTCBGUEMtVDAxKDgrOClfVEZpc3QgTC5kAgkPDxYCHwAFAzQuMGRkAgoPFQFGVGhlIGpvYiBuYW1lIGlzIENPUFktTTUtMjA0MDAwMjEwNTcxLTEwLjEtRmlzdCBMIEZQQy1UMDEoOCs4KV9URmlzdCBMLmQCCw8PFgIfAAUDNC4xZGQCDA8VAUZUaGUgam9iIG5hbWUgaXMgQ09QWS1NNS0yMDQwMDAyMTA1NzEtMTAuMS1GaXN0IEwgRlBDLVQwMSg4KzgpX1RGaXN0IEwuZAINDw8WAh8ABQM0LjFkZAIPDw8WAh8AZWRkAgUPZBYaAgEPDxYCHwBlZGQCAw8PFgIfAAUCTTVkZAIEDxUBRlRoZSBqb2IgbmFtZSBpcyBDT1BZLU01LTIwNDAwMDIxMDU3MS0xMC4xLUZpc3QgTCBGUEMtVDAxKDgrOClfVEZpc3QgTC5kAgUPDxYCHwAFBDIxLjBkZAIGDxUBRlRoZSBqb2IgbmFtZSBpcyBDT1BZLU01LTIwNDAwMDIxMDU3MS0xMC4xLUZpc3QgTCBGUEMtVDAxKDgrOClfVEZpc3QgTC5kAgcPDxYCHwAFBDIxLjBkZAIIDxUBRlRoZSBqb2IgbmFtZSBpcyBDT1BZLU01LTIwNDAwMDIxMDU3MS0xMC4xLUZpc3QgTCBGUEMtVDAxKDgrOClfVEZpc3QgTC5kAgkPDxYCHwAFBDIxLjBkZAIKDxUBRlRoZSBqb2IgbmFtZSBpcyBDT1BZLU01LTIwNDAwMDIxMDU3MS0xMC4xLUZpc3QgTCBGUEMtVDAxKDgrOClfVEZpc3QgTC5kAgsPDxYCHwAFHTxmb250IGNvbG9yPSdyZWQnPjIxLjA8L2ZvbnQ+ZGQCDA8VAUZUaGUgam9iIG5hbWUgaXMgQ09QWS1NNS0yMDQwMDAyMTA1NzEtMTAuMS1GaXN0IEwgRlBDLVQwMSg4KzgpX1RGaXN0IEwuZAINDw8WAh8ABQQyMS4wZGQCDw8PFgIfAGVkZAIGDw8WAh8ABeUCTm90ZTogRWFjaCB2YWx1ZSBpbmRpY2F0ZXMgdGhlIHByb2R1Y3Rpb24gdGltZSBmcm9tIGltbWVkaWF0ZWx5IGJlZm9yZSB0aGUgZmlyc3Qgc2VxdWVuY2UgdW50aWwgaW1tZWRpYXRlbHkgYWZ0ZXIgdGhlIGZpbmFsIHNlcXVlbmNlLiA8YnI+TG9jYXRlIHRoZSBjdXJzb3Igb3ZlciA8Zm9udCBjb2xvcj0iZ3JlZW4iPio8L2ZvbnQ+IHRvIGRpc3BsYXkgZGV0YWlscyBvbiBub24tcHJvZHVjdGlvbiB0aW1lcyBzdWNoIHJlY292ZXJpZXMgYW5kIHByb2R1Y3Rpb24gc3RvcCBjYXVzZXMuIFRoaXMgbm9uLXByb2R1Y3Rpb24gdGltZSBpcyBub3QgaW5jbHVkZWQgaW4gdGhlIGRpc3BsYXllZCB0b3RhbCBwcm9kdWN0aW9uIHRpbWUuZGQCBA9kFgJmD2QWAmYPZBYCZg9kFgICBA8QDxYCHgdDaGVja2VkaGRkZGQYAgUeX19Db250cm9sc1JlcXVpcmVQb3N0QmFja0tleV9fFhYFElVjSGVhZGVyMSRpYlNlYXJjaAUXVWNNZW51JEltYWdlQnV0dG9uQ2xvc2UFD0ltYWdlQnV0dG9uQmFjawUTSW1hZ2VCdXR0b25CYWNrSGFsZgUWSW1hZ2VCdXR0b25Gb3J3YXJkSGFsZgUSSW1hZ2VCdXR0b25Gb3J3YXJkBRpJbWFnZUJ1dHRvblVwZGF0ZVllc3RlcmRheQUWSW1hZ2VCdXR0b25VcGRhdGVUb2RheQUWSW1hZ2VCdXR0b25VcGRhdGVTaGlmdAUUSW1hZ2VCdXR0b25VcGRhdGUxMjAFE0ltYWdlQnV0dG9uVXBkYXRlNjAFE0ltYWdlQnV0dG9uVXBkYXRlMzAFEUltYWdlQnV0dG9uVXBkYXRlBQ9JbWFnZUJ1dHRvblRhY3QFFUltYWdlQnV0dG9uUHJvZHVjdGlvbgUSSW1hZ2VCdXR0b25IaXN0b3J5BRFJbWFnZUJ1dHRvblBhbmVscwUUSW1hZ2VCdXR0b25QYXJ0VXNhZ2UFFkltYWdlQnV0dG9uSW5mb3JtYXRpb24FE0ltYWdlQnV0dG9uRXZlbnRMb2cFEUxpbmtCdXR0b25SZWZyZXNoBRJJbWFnZUJ1dHRvbkVhY2hKb2IFCk11bHRpVmlldzEPD2QCAWS/nQBgAI/ISI07deLIhvsMVszbAu0HIj+Bi64tL0YGlA==" />
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+var theForm = document.forms['TactInfo'];
+if (!theForm) {
+    theForm = document.TactInfo;
+}
+function __doPostBack(eventTarget, eventArgument) {
+    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+        theForm.__EVENTTARGET.value = eventTarget;
+        theForm.__EVENTARGUMENT.value = eventArgument;
+        theForm.submit();
+    }
+}
+//]]>
+</script>
+
+
+<div>
+
+	<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="/wEdACGB/BfCR6bNm/keGP/TL69I0J4eK2Fe6yzl9vedxHqyhLh6jHhWtGy+v7iWhTtOE7Qyn9o1AWpGrMI48F2UWCsGbDpLkBvxhhgNkpQKEpKrdBGcovCeb7vQjSVDhBRTQvps0iAst08a0rHslo5zV/nu9Lv7ve9EysSO6VGXmHqDBe3+MR9ycrSqOKmhQJXtO3GfBqBksFSnsAVOMH/NfLz22/YgBXLOKUJOTZm/BnynJUV3jyXV/eH2jUu6avXmp8qqi8lkH3yyLR/Ew6I3miarPRHrsX+lS07KJ1l4lNkdVqwuTrZMkXBDa297nQKB2z5ymXNje9mGByZvlbKcO/aooTOPQTroCVYNu8NKYvXNY+qJdhA+DIe2XOHtlPq2tEr2w7PZv7mAnwL9RAjhwEBYJANa5dd5BhD7EIzCFz2ZaZJ53ZgM9ZoWfWb2mVmHVvlkOQur+3IN59rnKcJvPTeRIRFDHRrZ66YaQH6vPIIRn+iaowRwWBFaNjleg3gxzihQsSuYOIiQ0iF63EtYAfgenRVa40+P14x1f8DN1lnYwVmKUI1pAIfCfnxZRVr1Z9f2gesWkeYaWW2z6rabKf2rQVFZ7fa+Th6amA3bAvgkwHgA71oqwflYo6X+cNISNKJK+0EyzSJyYkXnfH4e9X553YPNAxyjo3UatNIe5d8cNYF/Jafn3TRJLuihf7boAbIR1mqBjz81tlvJ0akPJ16tKVGi/uhlM15ws6/mr1ITlQ==" />
+</div>
+		<!-- 僿僢僟乕晹暘偺昞帵 -->
+		
+<script language="javascript">
+<!--
+	// 惗嶻枃悢偺僇僂儞僩傪儕僙僢僩偟傑偡丅
+	function ConfirmCountReset(strMsg)
+	{
+		if (window.confirm(strMsg))
+			window.location.href = "./Trend.aspx?Reset=1";
+	}
+	
+	function CancelEnterKeySubmit()
+	{
+		// ENTER僉乕墴壓帪偵儊僯儏乕偑偨偨傓審偺懳嶔
+		var src = window.event.srcElement;
+		if (13 == event.keyCode)
+		{
+			if ('' == src.type)
+				src.click();
+			else if ('submit' != src.type  && 'button' != src.type && 'textarea' != src.type)
+				return false;
+		}
+	}
+// -->
+</script>
+<table cellspacing="0" cellpadding="0" width="100%" height="50" bgcolor="#6699cc" border="0">
+	<tr>
+		<td nowrap colspan="2" align="right" valign="top"><a class='HeaderLink' href='./FloorMonitor.aspx' style='color:#6699CC'>|</a>
+	<tr>
+		<td nowrap rowspan="2" class="MenuTitle">
+			<img src="./img/fujimoni.png" border="0" align="absBottom">&nbsp;
+			<span id="UcHeader1_LabelTitle">Production data</span>
+		<td style="text-align:right;vertical-align:bottom">
+			<input name="UcHeader1$tbSearch" type="text" id="UcHeader1_tbSearch" style="width:100px;" /><input type="image" name="UcHeader1$ibSearch" id="UcHeader1_ibSearch" title="Seach" src="img/Search16x16.png" align="middle" style="border-width:0px;" /><br />
+			<span id="UcHeader1_LabelHost" class="WhiteText">working on Flexa</span>
+</table>
+
+		<table cellspacing="0" cellpadding="0" width="100%" border="0">
+			<tr>
+				<!-- 儊僯儏乕晹暘偺昞帵 -->
+				<td valign="top" bgcolor="#ffffcc">
+					<div>
+
+<html>
+  <head>
+		<link href="./Global.css" type="text/css" rel="stylesheet">
+		<script language="JavaScript">
+		<!-- 
+		function DispManual(form)
+		{
+			var id = form.McManualList.selectedIndex;
+			var strPath = form.McManualList.options[id].value;
+			if ("" != strPath)
+				window.open(strPath, "_blank");
+		}
+		// -->
+		</script>
+	  <style>
+	  	.Links{}
+	  </style>
+  </head>
+	<body leftmargin="0" topmargin="0">
+		<table id="UcMenu_TableShowMenu" cellspacing="0" cellpadding="0" border="0">
+	<tr>
+		<td class="topMenu">
+					<table border="0" cellpadding="0" cellspacing="0" width="100%">
+						<tr>
+							<td nowrap align="left"><a id="UcMenu_LinkButtonLogout" class="WhiteLink" href="javascript:__doPostBack(&#39;UcMenu$LinkButtonLogout&#39;,&#39;&#39;)" style="font-weight: bold; font-size: 100%">Log off</a><br><div class="WhiteText">&nbsp;DefaultUser</div></td>
+							<td align="right"><input type="image" name="UcMenu$ImageButtonClose" id="UcMenu_ImageButtonClose" title="Click this button to minimize the sidebar." class="Cursor" src="./img/CloseMenu.gif" style="border-width:0px;" /></td>
+						</tr>
+					</table>
+				</td>
+	</tr>
+	<tr>
+		<td bgcolor="#cccc99"><img height="1" src="data:image/gif;base64,R0lGODlhAQABAIAAAP8zzAAAACH5BAEAAAAALAAAAAABAAEAQAIChFEAOwA="></td>
+	</tr>
+	<tr>
+		<td nowrap="nowrap" class="MenuCategory">Accessory Software</td>
+	</tr>
+	<tr>
+		<td nowrap="nowrap" class="MenuList"><a id="UcMenu_LinkButtonFloorMonitor" class="BlackLink" href="javascript:__doPostBack(&#39;UcMenu$LinkButtonFloorMonitor&#39;,&#39;&#39;)">Floor Monitor</a></td>
+	</tr>
+	<tr>
+		<td nowrap="nowrap" class="MenuList"></td>
+	</tr>
+	<tr>
+		<td nowrap="nowrap" class="MenuList"><a id="UcMenu_LinkButtonErrorSearch" class="BlackLink" href="javascript:__doPostBack(&#39;UcMenu$LinkButtonErrorSearch&#39;,&#39;&#39;)">Error Search</a></td>
+	</tr>
+	<tr>
+		<td nowrap="nowrap" class="MenuList"><a id="UcMenu_LinkButtonSelectMachineType" class="BlackLink" href="javascript:__doPostBack(&#39;UcMenu$LinkButtonSelectMachineType&#39;,&#39;&#39;)">Auto Changeover<br>&nbsp;&nbsp;(Handy Scanner)</a></td>
+	</tr>
+	<tr>
+		<td nowrap="nowrap" class="MenuList"><a id="UcMenu_LinkButtonJob" class="BlackLink" href="javascript:__doPostBack(&#39;UcMenu$LinkButtonJob&#39;,&#39;&#39;)"><img src="img/JobExplorer.png" align="middle" />&nbsp;Job</a></td>
+	</tr>
+	<tr>
+		<td bgcolor="#cccc99"><img height="1" src="data:image/gif;base64,R0lGODlhAQABAIAAAP8zzAAAACH5BAEAAAAALAAAAAABAAEAQAIChFEAOwA="></td>
+	</tr>
+	<tr>
+		<td nowrap="nowrap" align="right" class="MenuList">
+					<div id="UcMenu_PanelManual" style="text-align:left;">
+			<a target='_blank' href='../Manual/en/00ManuAccessoryList.htm'><img src='img/manual.png' style='vertical-align:middle'>Accessory</a><br>
+		</div>
+			</td>
+	</tr>
+	<tr>
+		<td bgcolor="#cccc99"><img height="1" src="data:image/gif;base64,R0lGODlhAQABAIAAAP8zzAAAACH5BAEAAAAALAAAAAABAAEAQAIChFEAOwA="></td>
+	</tr>
+	<tr>
+		<td nowrap="nowrap" class="MenuCategory">Environment settings</td>
+	</tr>
+	<tr>
+		<td nowrap="nowrap" class="MenuList"><a id="UcMenu_LinkButtonSettingSystemInfo" class="BlackLink" href="javascript:__doPostBack(&#39;UcMenu$LinkButtonSettingSystemInfo&#39;,&#39;&#39;)">System Settings</a></td>
+	</tr>
+	<tr>
+		<td nowrap="nowrap" class="MenuList"><a id="UcMenu_LinkButtonReferenceInfo" class="BlackLink" href="javascript:__doPostBack(&#39;UcMenu$LinkButtonReferenceInfo&#39;,&#39;&#39;)">Status Reference</a></td>
+	</tr>
+	<tr>
+		<td><br></td>
+	</tr>
+	<tr>
+		<td bgcolor="#cccc99"><img height="1" src="data:image/gif;base64,R0lGODlhAQABAIAAAP8zzAAAACH5BAEAAAAALAAAAAABAAEAQAIChFEAOwA="></td>
+	</tr>
+	<tr>
+		<td nowrap="nowrap" class="MenuCategory">Messages</td>
+	</tr>
+	<tr>
+		<td style="PADDING-TOP: 3px">
+				
+				</td>
+	</tr>
+	<tr>
+		<td height="5"></td>
+	</tr>
+	<tr>
+		<td nowrap="nowrap" class="MenuList" align="right"><a class="BlackLink" href="./WhiteBoard.aspx" target="_top">To list...</a></td>
+	</tr>
+	<tr>
+		<td height="5"></td>
+	</tr>
+	<tr>
+		<td><hr style="height:0;margin:0px 0px 5px 0px;padding:0;border:0;border-top:1px solid #cccc99;" /></td>
+	</tr>
+	<tr class="Links">
+		<td nowrap="nowrap" class="MenuCategory">Link</td>
+	</tr>
+	<tr class="Links">
+		<td nowrap="nowrap" class="MenuList"><a href="http://172.27.76.1/FujiFlexa/index.asp" target="_blank" class="BlackLink">Line Reporter</a></td>
+	</tr>
+	<tr class="Links">
+		<td><br></td>
+	</tr>
+	<tr class="Links">
+		<td><hr style="height:0;margin:0px 0px 5px 0px;padding:0;border:0;border-top:1px solid #cccc99;" /></td>
+	</tr>
+	<tr>
+		<td><div id="clock_hou" style=""/></td>
+	</tr>
+</table>
+
+		
+		
+
+<!--[if (gte IE 10)|!(IE)]><!-->
+
+		<link rel="stylesheet" href="js/jClocksGMT-master/css/jClocksGMT.css">
+		<script src="js/jClocksGMT-master/js/jquery.rotate.js"></script>
+		<script src="js/jClocksGMT-master/js/jClocksGMT.js"></script>
+
+		<script type="text/javascript">
+			$(function () {
+				var ua = navigator.userAgent.toLowerCase();
+				var ver = navigator.appVersion.toLowerCase();
+
+				$('#clock_hou').jClocksGMT({ title: 'China', offset: '8', timeformat: 'H:mm', date: true, dateformat: 'YYYY/M/D', imgpath: 'js/jClocksGMT-master/' });
+			});
+		</script>
+
+<![endif]-->
+
+	</body>
+</html>
+</div>
+				</td>
+				<td bgcolor="#cccc99" width="1px"><img src="./img/1ptrans.gif"></td>
+				<td valign="top" style="padding-top: 5px ;border-left: white 2px solid; background-color: white;" width="4096px" height="360px">
+					<!-- 偙偙偐傜僐儞僥儞僣偱偡乮曇廤屻傕徚偝側偄偱偹両乯 -->
+					<table cellspacing="0" cellpadding="0" border="0" style="margin-left: 10px;">
+						<tr>
+							<td>
+								<!-- 偙偙偐傜僐儞僥儞僣偱偡乮曇廤屻傕徚偝側偄偱偹両乯 -->
+								<table cellspacing="0" cellpadding="0" border="0" width="100%">
+									<tr valign="bottom">
+										<!-- 儔僀儞柤 -->
+										<td nowrap class="BlackText">
+											<div style="float:left;height:32px;position:relative"><div style="position:absolute;bottom:0px">Line:<span id="LabelLine" style="font-weight:bold;">A01-10-Line</span></div></div>
+											<div id="DataSpan" style="margin-left:290px;visibility:visible;">
+	
+												<table style="border-collapse:collapse">
+													<tr>
+														<td><div class="TimeButton"><input type="image" name="ImageButtonBack" id="ImageButtonBack" title="Back" class="linkButton" src="img/rew.png" style="border-width:0px;" /><span>-2h</span></div>
+														<td><div class="TimeButton"><input type="image" name="ImageButtonBackHalf" id="ImageButtonBackHalf" title="Back" class="linkButton" src="img/rewhalf.png" style="border-width:0px;" /><span>-1h</span></div>
+														<td><div class="TimeButton"><input type="image" name="ImageButtonForwardHalf" id="ImageButtonForwardHalf" title="Forward" class="linkButton" src="img/forwardhalf.png" style="border-width:0px;visibility:visible;" /><span style="visibility:visible">+1h</span></div>
+														<td><div class="TimeButton"><input type="image" name="ImageButtonForward" id="ImageButtonForward" title="Forward" class="linkButton" src="img/forward.png" style="border-width:0px;visibility:visible;" /><span style="visibility:visible">+2h</span></div>
+														<td><div class="TimeButton"><input type="image" name="ImageButtonUpdateYesterday" id="ImageButtonUpdateYesterday" title="Yesterday" class="linkButton" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQrSURBVFhHzVZdb1RVFD3TmWk7NnzMQBEKrUCl0+mAH7WhFGoxJDUYH+Cl0cREeVDDIyE+9kkpiNgBCxqMCih+VQMk1oyFTJ3YTNI2NiET0/gXykuf+v21POvQczlz5t4ybUC9ye7M3nfttdbe595JhbCuRCIBM+z7K8nT6XSpxTeT3/+iOC6aRVJFi+gdGxuDGaytNkKtoTsm1+i90QWHi3rUFgfE74FzAfg7/Qic9mNkZCQn9l3fjSO9LXij72W8kzmKE3++hvbsWzj197swrw6Zt2ePKQyx7Gnt3pfDdfevuyg5G0QwEUCgMwBqKwPiQwFxTsYxga6urpzwtxXhue4taLpZhUO/VuPV27VoS+/Bm5n6HAPMWSeGWPaE3i7J4UpcSMDX5kMgUQTxsdRTBppFWhn4SKDoPR9iTTHEGmOoa4hhd1McFe1r8MyPm7H3xjYc/GUHDv9Wg6OpeI44k9f/eFbViSGWPds7Iojvr0N8iS/WWIvik374aYADU1v9OSOTs9JApw+lnwSw9lIJyi+XofKrdXj66w2If/8k6n+qwP5bT6kJX+mN5hk4kqpTdWKIZQ97yUEucpKbQR0O/MDAaZlwC3Itxef9KLtYjMhnIWz5Yg22Xw0jen0j9vywGQ0/b1UC+jrcW+N8b03uwks9OxWGWPawlxzkIie5Sy8E769fDpxrgCakK3/Ch5Cxha1frsWOa2HUfluuiDmd19V4o1JhiGUPe/X05CR3CQ1weg7sHMEpmXQ82ELwfBGe6Api3aelKP+8TBGRsEZOVffdJnW+z3dX4AXDDHPWiXHEZS85yEVONTmD4jx2x8AHMnlfBrcgV+PTR6FNyDOskKusurIeO69FsOubDWrKmDRDQ/xkzjoxxHJyipdJDq6enGrtDOpwYGVAiIOLi4tYWFgoOObn5+EWK+GgJrVXbWBubg5m0FChBjTWMcBGr6nc6ra4zlfCQc3/lwGvqViXTnPCC1sojv15G3gYqb6vRWy8XffC6T5XA7OzszBDk3jVbVOF9hPH58V5BpjYzcz/cwPa1MzMDMxwW6+NYa5xbvfyNuAGWo7Ufga8THrxrsqAOZGbAfstmJ6ehlcsvV33fwmZLAfW9x5mwOTQ2EdmwCTkWt02QLGpqSkndI9Z09/zNuAG0jWbiEK2AVucvf+aAS8hsz45OQkzll7zFvUMMLEBOtck5n17A24Y4r3qvFeQAS8CtyOwsXaezWaRTCbR19eHoaEh9Pf3j0rMemcDExMTsMN+rezcfA7MM9c4k6+npwf8J4TTDw4OToTD4SqKL2vAzRRrFLMfQta88KynUimMj49jeHh4urq6ul6L87OFrxVvFhrahPnmsLZc/8DAAFc/GY1GG0xxZYA/i4X+FK8Wl8lk7kUikZgtzrxSxoGlaJafjyPIv81N/B+TWN3iv0EP1AAAAABJRU5ErkJggg==" style="border-width:0px;" /></div>
+														<td><div class="TimeButton"><input type="image" name="ImageButtonUpdateToday" id="ImageButtonUpdateToday" title="Today" class="linkButton" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQgSURBVFhHzVZbT1RXFN7DzABT4mXG0ioKolSGYbRVSoooxaYJjU0f9IXUxKT1oTU+No2PPFnxUmVUeommF7X2IjZqUpopbYZOSiYBUhIzaUj/Ar7wxP32dX9b9rjPnjM40LR4kjXnrLW/9a1vrb3PyQhhXbFYDKbZ68vxk8lkscU3nZ3/qjghmkRcWbPoGR0dhWmMrdQCLYHfTK6RhyPzGS7WY22xX/zuu+CDt8ML3xkvhoeHHbb31k4c6mnG0d438H7qMD748220pd/F6b+Pw7zapd+WPqYwxDKnpWuvg+vBXw9QdN4Pf8wHX4cPrK0EiHMC4oK0YwKdnZ0O87YWYHfXJjTeq8DrP1fhrV9r0JrchXdSdQ4B9BknhljmBN4rcnDFLsfgafXAFyuAuCjrKQFNIqkEfCxQcNKDSGMEkYYIausj2NkYRVnbGrx4eyNeubsFB37ahoO/VONwIuooTufIHy+pODHEMqeyPYTovlpEF/kiDTUo/NALLwWwYdZWP2elc14K6PCg+IoPaz8tQunVEpR/tQ4v3NyA6PfPo+5OGfbd36o6fLMnnCXgUKJWxYkhljnMJQe5yEluGuuw4ccCzkiHU5BjKbzkRcknhQh9HsCmL9ag8noQ4VvPYtcPG1H/42ZVQF8He6ozzy3xHXite7vCEMsc5pKDXOQkd/Fl/6Pxy4adAihCqvLGPAgYU9j85VpsuxFEzbelipjd5boa7pYrDLHMYa7unpzkLqIAds+GM1twWjrtj6fgv1SAZzr9WPdZMUqvlSgiElbLrmq/e07t756uMrxsiKHPODGZ4jKXHOQip+qcxuLc9oyAj6RzShqnIEfj0VuhRcg9LJOjrPh6PbbfCGHHNxtUlxEphoJ4p884McSycxYvkRwcPTnV2Gmsw4aVACEOLCwsYH5+Pm+bm5uDmy2HgzVZe8UCZmdnYRoF5StAYzMCmJirK7e4XVz7y+FgzadLQK6uGJdKHbYUVq/pnFzYrAnkAtpETyL+VwJmZmZgmi6WK26Kdstjvp2rfZ6XzBmg4wZcdQFa1PT0NExz2wa9bp8XO1f7WRPIBcynOLfifxGgu2Mx+9AyptenpqYcz/RtW3y7Hn0J6biB7NiqCjC7c5uAXp+cnATN9nVc37MmYANM3ybjZOwtWFUB9sm3fTYzMTHhML5hEteszgAdG6B9TWauu02AMRPjlmeu5yUgF8lKBKTTacTjcfT29mJwcBB9fX0jkn99ZgLj4+Ow7UmjNc8Bx2zm61wd6+7uBv+EcAoDAwPjwWCwgsWXFOAmijEWsw+hLcDOTSQSGBsbw9DQ0FRVVVWdLs57M18rLuZrWoT5pjC2VH5/fz9HPxEOh+vN4koAv8v5fopXikulUg9DoVDELk6/XNr+RWuS9//CyL/Frfg/eFjYOfot2HMAAAAASUVORK5CYII=" style="border-width:0px;" /></div>
+														<td><div id="DivShift" class="TimeButton" style="visibility:hidden;">
+		<input type="image" name="ImageButtonUpdateShift" id="ImageButtonUpdateShift" title="Shift" class="linkButton" src="img/skipforward.png" style="border-width:0px;" /><span>Shift</span>
+	</div>
+														<td><div class="TimeButton"><input type="image" name="ImageButtonUpdate120" id="ImageButtonUpdate120" title="Last 120min" class="linkButton" src="img/skipforward.png" style="border-width:0px;" /><span>120min</span></div>
+														<td><div class="TimeButton"><input type="image" name="ImageButtonUpdate60" id="ImageButtonUpdate60" title="Last 60min" class="linkButton" src="img/skipforward.png" style="border-width:0px;" /><span>60min</span></div>
+														<td><div class="TimeButton"><input type="image" name="ImageButtonUpdate30" id="ImageButtonUpdate30" title="Last 30min" class="linkButton" src="img/skipforward.png" style="border-width:0px;" /><span>30min</span></div>
+														<td><input name="dtPickerFrom" type="text" value="2022-04-15 12:00" id="dtPickerFrom" class="datetimepicker" style="width:125px;" />
+														<td>To
+														<td><input name="dtPickerTo" type="text" value="2022-04-15 14:00" id="dtPickerTo" class="datetimepicker" style="width:125px;" />
+														<td><input type="image" name="ImageButtonUpdate" id="ImageButtonUpdate" title="Update" class="linkButton" src="img/Refresh.png" onclick="if(CheckInput()==false){return false;};" style="border-width:0px;vertical-align:bottom" />
+														<td><span id="countdown" style="display: inline-block;text-align:right;width:50px;height:20px;position:relative"></span>
+													</tr>
+												</table>
+											
+</div>
+										</td>
+									</tr>
+								</table>
+								
+								<!-- 僙僷儗乕僩儔僀儞 -->
+								<hr style="height:0;margin:0px 0px 5px 0px;padding:0;border:0;border-top:1px solid #6699cc;" />
+
+								<table cellspacing="0" cellpadding="0" border="0" width="100%">
+								<tr><td>
+								<div class='ProdTab' style='float:left'><input type="image" name="ImageButtonTact" id="ImageButtonTact" class="linkButton" src="img/clock.png" style="background-color:White;border-width:0px;margin:0px 0px 0px 0px" /><br/>CycleTime</div>
+								<div class='ProdTab' style='float:left'><input type="image" name="ImageButtonProduction" id="ImageButtonProduction" class="linkButton" src="img/chart.png" style="background-color:DodgerBlue;border-width:0px;margin:0px 0px 0px 0px" /><br/>Summary</div>
+								<div class='ProdTab' style='float:left'><input type="image" name="ImageButtonHistory" id="ImageButtonHistory" class="linkButton" src="img/History.png" style="background-color:White;border-width:0px;margin:0px 0px 0px 0px" /><br/>History</div>
+								<div class='ProdTab' style='float:left'><input type="image" name="ImageButtonPanels" id="ImageButtonPanels" class="linkButton" src="img/Panels.png" style="background-color:White;border-width:0px;margin:0px 0px 0px 0px" /><br/>Panel</div>
+								<div class='ProdTab' style='float:left'><input type="image" name="ImageButtonPartUsage" id="ImageButtonPartUsage" class="linkButton" src="img/Part.png" style="background-color:White;border-width:0px;margin:0px 0px 0px 0px" /><br/>PartUsage</div>
+								<div class='ProdTab' style='float:left'><input type="image" name="ImageButtonInformation" id="ImageButtonInformation" class="linkButton" src="img/Information.png" style="background-color:White;border-width:0px;margin:0px 0px 0px 0px" /><br/>Error</div>
+								<div class='ProdTab' style='float:left'><input type="image" name="ImageButtonEventLog" id="ImageButtonEventLog" class="linkButton" src="img/log.png" style="background-color:White;border-width:0px;margin:0px 0px 0px 0px" /><br/>EventLog</div>
+								<div class='ProdTab' style='float:left'><input type="image" name="LinkButtonRefresh" id="LinkButtonRefresh" title="Refresh" class="linkButton" src="img/Refresh.png" style="border-width:0px;visibility:hidden" /></div>
+								<div class='ProdTab' style='float:left;margin-left:480px'><input type="image" name="ImageButtonEachJob" id="ImageButtonEachJob" class="linkButton" src="img/EachJob.png" style="background-color:White;border-width:0px;" /><br/>Each Job</div>
+								</table>
+								<!-- 僙僷儗乕僩儔僀儞 -->
+								<hr style="height:0;margin:0;padding:0;border:0;border-top:1px solid #6699cc;" />
+
+								
+									<script type="text/javascript" src="js/highcharts/highcharts.js"></script>
+									<script type="text/javascript" src="js/tablesorter/jquery.tablesorter.min.js"></script>
+									<script type="text/javascript">
+										$(function () {
+											$('#ModGraph').highcharts({
+												chart: { type: 'column'	},
+												title: { text: 'Module Utilization' },
+											//	subtitle: { text: '<span style='visibility:hidden'>(Last 10 minutes)</span>' },
+												credits : { enabled : false },
+												xAxis: {
+													categories: ['M1','M2','M3','M4','M5']
+												},
+												yAxis: {
+													min: 0,
+													title: {
+														text: 'percentage'
+													}
+												},
+												tooltip: {
+													pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ({point.percentage:.0f}%)<br/>',
+													shared: true
+												},
+												plotOptions: {
+													column: {
+														stacking: 'percent',
+														dataLabels: {
+															enabled: true,
+															color: 'white',
+															formatter:function(){return this.percentage>=5?(this.percentage).toFixed(0)+'':'';}
+														}
+													}
+												},
+												legend: {
+													borderWidth: 1,
+													borderRadius: 5,
+													shadow: false
+												},
+												series: [
+													{name: 'Product',color: '#1E90FF',data: [551,1505,1707,1412,5231]},{name: 'Wait Previous',color: '#32CD32',data: [2637,1336,670,271,36]},{name: 'Wait Next',color: '#9ACD32',data: [4012,4359,4823,5517,367]},{name: 'Changeover',color: '#BDB76B',data: [0,0,0,0,0]},{name: 'Part Supply',color: '#808000',data: [0,0,0,0,1566]},{name: 'Machine Error',color: '#FF4500',data: [0,0,0,0,0]},{name: 'Operator Downtime',color: '#FF8C00',data: [0,0,0,0,0]},{name: 'Maintenance',color: '#800080',data: [0,0,0,0,0]},{name: 'Other',color: '#c0c0c0',data: [0,0,0,0,0]}
+												]
+											});
+										});
+									</script>
+									<script type="text/javascript">
+										$(function () {
+											$('#LineGraph').highcharts({
+												chart: {
+													plotBackgroundColor: null,
+													plotBorderWidth: null,
+													plotShadow: false
+												},
+												title: { text: 'Line Utilization' },
+											//	subtitle: { text: '<span style='visibility:hidden'>(Last 10 minutes)</span>' },
+												credits : { enabled : false },
+												tooltip: {
+        											pointFormat: '<b>{point.percentage}%</b>',
+													valueDecimals: 0
+												},
+												plotOptions: {
+													pie: {
+														allowPointSelect: true,
+														cursor: 'pointer',
+														dataLabels: {
+															enabled: false,
+															color: '#000000',
+															connectorColor: '#000000',
+															formatter: function() {
+																return '<b>'+ this.point.name +'</b>: '+ (Math.floor(this.percentage*10) / 10) +' %';
+															}
+														},
+														size: '150%',
+														showInLegend: true,
+														dataLabels: {
+															enabled: false,
+															distance:-30,
+															formatter:function(){
+																return (this.percentage).toFixed(0)+'%';
+															}
+														}
+													}
+												},
+												legend: {
+												    borderWidth: 1,
+												    borderRadius: 5,
+												    shadow: false
+												},
+												series: [
+													{
+														type: 'pie',
+														data: [
+															{name:'Product',color:'#1E90FF', y:10406,dataLabels:{enabled:true,color:'white'} },{name:'Wait Previous',color:'#32CD32', y:4950,dataLabels:{enabled:true,color:'white'} },{name:'Wait Next',color:'#9ACD32', y:19078,dataLabels:{enabled:true,color:'white'} },{name:'Changeover',color:'#BDB76B', y:0 },{name:'Part Supply',color:'#808000', y:1566 },{name:'Machine Error',color:'#FF4500', y:0 },{name:'Operator Downtime',color:'#FF8C00', y:0 },{name:'Maintenance',color:'#800080', y:0 },{name:'Other',color:'#c0c0c0', y:0 }
+														]
+													}
+												]
+											});
+										});
+									</script>
+									<style type="text/css">
+										#ProductionTable th
+										{
+											border-right-style: solid;
+											border-right-color: silver;
+											border-right-width: 1px;
+										}
+										#ProductionTable td
+										{
+											border-right-style: solid;
+											border-right-color: silver;
+											border-right-width: 1px;
+										}
+										#Table1 td
+										{
+											border-right-style: solid;
+											border-right-color: silver;
+											border-right-width: 1px;
+										}
+									</style>
+										<div style="padding:5px">
+											<span id="TabTitle">Summary</span>
+											<span id="TabSubTitle"><span style='visibility:hidden'>(Last 10 minutes)</span></span>
+											<span style="margin-left:726px"><a id="dl-xlsx" href="#" style="visibility:hidden"><img style="vertical-align:middle" src="Img/xlsx44x20.png" title="export xlsx"/></a></span>
+										</div>
+										<div style="float:left;">
+											<div id="LineGraph" style="width:450px; height:300px;"></div>
+										</div>
+										<div style="float:left;">
+											<div style="width:500px;padding:10px;">
+											<table>
+											<tr><td>
+											<span style="font-family:'Lucida Grande','Lucida Sans Unicode',Verdana,Arial,Helvetica,sans-serif;font-size:16px;color:#274b6d;fill:#274b6d;">Production</span>
+											<td align="right">
+											<span><a style="position:relative;left:-40px;top:6px" class="export" data-exportfile="Production" data-exporttarget="ProductionTable" href="#"><img src="Img/csv35x20.png" title="export csv"/></a></span>
+											<tr><td>
+											<table id="ProductionTable" cellspacing="0" cellpadding="0" class="tablesorter table-to-export" data-sheet-name="Production" border="0" style="border-width:0px;border-collapse:collapse;table-layout:fixed;">
+	<thead>
+		<tr align="left">
+			<th class="Header" align="left" style="white-space:nowrap;padding:0px 0px 0px 5px">Job</th><th class="Header" align="left" style="white-space:nowrap;padding:0px 0px 0px 5px">Panel</th><th class="Header" align="left" style="white-space:nowrap;padding:0px 0px 0px 5px">Board</th>
+		</tr>
+	</thead><tbody>
+		<tr>
+			<td class="BlackText" style="white-space:nowrap;padding:0px 0px 0px 5px;">COPY-M5-204000210571-10.1-Fist L FPC-T01(8+8) T Fist L</td><td class="BlackText" align="right" style="white-space:nowrap;padding:0px 0px 0px 5px;">205</td><td class="BlackText" align="right" style="white-space:nowrap;padding:0px 0px 0px 5px;">1640/1640</td>
+		</tr>
+	</tbody>
+</table>
+											</table>
+											</div>
+										</div>
+										<div style="clear:both;">
+											<div id="ModGraph" style="width:450px; height:400px;float:left;"></div>
+											<div style="float:left;position:relative;left:-35px;top:10px">
+												<a class="export" href="#" data-exporttarget="TableUtilization" data-exportfile="Utilization"><img src="Img/csv35x20.png" title="export csv"/></a>
+												<table id="TableUtilization" class="table-to-export" data-sheet-name="Utilization" border="0" style="display:none">
+	<tr>
+		<td class="Header">Module</td><td>M1</td><td>M2</td><td>M3</td><td>M4</td><td>M5</td>
+	</tr><tr>
+		<td class="BlackText">Product</td><td>551</td><td>1505</td><td>1707</td><td>1412</td><td>5231</td>
+	</tr><tr>
+		<td class="BlackText">Loading</td>
+	</tr><tr>
+		<td class="BlackText">Wait Previous</td><td>2637</td><td>1336</td><td>670</td><td>271</td><td>36</td>
+	</tr><tr>
+		<td class="BlackText">Wait Next</td><td>4012</td><td>4359</td><td>4823</td><td>5517</td><td>367</td>
+	</tr><tr>
+		<td class="BlackText">Changeover</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+	</tr><tr>
+		<td class="BlackText">Part Supply</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1566</td>
+	</tr><tr>
+		<td class="BlackText">Machine Error</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+	</tr><tr>
+		<td class="BlackText">Operator Downtime</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+	</tr><tr>
+		<td class="BlackText">Maintenance</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+	</tr><tr>
+		<td class="BlackText">Other</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+	</tr>
+</table>
+											</div>
+											<div style="float:left;padding:10px;position:relative;left:-35px">
+											<table>
+											<tr><td>
+											<span style="font-family:'Lucida Grande','Lucida Sans Unicode',Verdana,Arial,Helvetica,sans-serif;font-size:16px;color:#274b6d;fill:#274b6d;">Part Usage</span>
+											<td align="right">
+											<span style="position:relative;left:-40px;top:8px"><a class="export" href="#" data-exporttarget="Table1" data-exportfile="PartUsage"><img src="Img/csv35x20.png" title="export csv"/></a></span>
+											<tr><td>
+											<table id="Table1" class="table-to-export" data-sheet-name="Part Usage" border="0" style="border-collapse: collapse;">
+	<tr>
+		<td class="Header">Module</td><td class="Header" align="center">M1</td><td class="Header" align="center">M2</td><td class="Header" align="center">M3</td><td class="Header" align="center">M4</td><td class="Header" align="center">M5</td><td class="Header" align="center">Total</td>
+	</tr><tr>
+		<td class="BlackText">Pickup count</td><td class="BlackText" align="center">-</td><td class="BlackText" align="right">1226</td><td class="BlackText" align="right">3698</td><td class="BlackText" align="right">1230</td><td class="BlackText" align="right">2496</td><td class="BlackText" align="right">8650</td>
+	</tr><tr class="EvenItem">
+		<td class="BlackText">No pickup</td><td class="BlackText" align="center">-</td><td class="BlackText" align="right"><span style='visibility:hidden'>0</span></td><td class="BlackText" align="right"><span style='visibility:hidden'>0</span></td><td class="BlackText" align="right"><span style='visibility:hidden'>0</span></td><td class="BlackText" align="right"><span style='visibility:hidden'>0</span></td><td class="BlackText" align="right"><span style='visibility:hidden'>0</span></td>
+	</tr><tr>
+		<td class="BlackText">Parts usage</td><td class="BlackText" align="center">-</td><td class="BlackText" align="right">1226</td><td class="BlackText" align="right">3698</td><td class="BlackText" align="right">1230</td><td class="BlackText" align="right">2496</td><td class="BlackText" align="right">8650</td>
+	</tr><tr class="EvenItem">
+		<td class="BlackText">Reject parts</td><td class="BlackText" align="center">-</td><td class="BlackText" align="right"><span style='visibility:hidden'>0</span></td><td class="BlackText" align="right"><span style='visibility:hidden'>0</span></td><td class="BlackText" align="right"><span style='visibility:hidden'>0</span></td><td class="BlackText" align="right"><span style='visibility:hidden'>0</span></td><td class="BlackText" align="right"><span style='visibility:hidden'>0</span></td>
+	</tr><tr>
+		<td class="BlackText">Error parts</td><td class="BlackText" align="center">-</td><td class="BlackText" align="right">2</td><td class="BlackText" align="right">8</td><td class="BlackText" align="right"><span style='visibility:hidden'>0</span></td><td class="BlackText" align="right">36</td><td class="BlackText" align="right">46</td>
+	</tr><tr class="EvenItem">
+		<td class="BlackText">Dislodged parts</td><td class="BlackText" align="center">-</td><td class="BlackText" align="right"><span style='visibility:hidden'>0</span></td><td class="BlackText" align="right"><span style='visibility:hidden'>0</span></td><td class="BlackText" align="right"><span style='visibility:hidden'>0</span></td><td class="BlackText" align="right"><span style='visibility:hidden'>0</span></td><td class="BlackText" align="right"><span style='visibility:hidden'>0</span></td>
+	</tr><tr>
+		<td class="BlackText">Rescan count</td><td class="BlackText" align="center">-</td><td class="BlackText" align="right"><span style='visibility:hidden'>0</span></td><td class="BlackText" align="right"><span style='visibility:hidden'>0</span></td><td class="BlackText" align="right"><span style='visibility:hidden'>0</span></td><td class="BlackText" align="right"><span style='visibility:hidden'>0</span></td><td class="BlackText" align="right"><span style='visibility:hidden'>0</span></td>
+	</tr><tr class="EvenItem">
+		<td class="BlackText">LCR check</td><td class="BlackText" align="center">-</td><td class="BlackText" align="right"><span style='visibility:hidden'>0</span></td><td class="BlackText" align="right"><span style='visibility:hidden'>0</span></td><td class="BlackText" align="right"><span style='visibility:hidden'>0</span></td><td class="BlackText" align="right"><span style='visibility:hidden'>0</span></td><td class="BlackText" align="right"><span style='visibility:hidden'>0</span></td>
+	</tr><tr>
+		<td title="(Usage - Dislodge) / Usage * 100" class="BlackText">Pickup rate</td><td class="BlackText" align="center">-</td><td class="BlackText" align="right">100.00</td><td class="BlackText" align="right">100.00</td><td class="BlackText" align="right">100.00</td><td class="BlackText" align="right">100.00</td><td class="BlackText" align="right">100.00</td>
+	</tr><tr class="EvenItem">
+		<td title="Reject / (Usage - Reject) * 100" class="BlackText">Reject rate</td><td class="BlackText" align="center">-</td><td class="BlackText" align="right"><span style='visibility:hidden'>0.00</span></td><td class="BlackText" align="right"><span style='visibility:hidden'>0.00</span></td><td class="BlackText" align="right"><span style='visibility:hidden'>0.00</span></td><td class="BlackText" align="right"><span style='visibility:hidden'>0.00</span></td><td class="BlackText" align="right"><span style='visibility:hidden'>0.00</span></td>
+	</tr><tr>
+		<td title="Error / (Usage - Reject) * 100" class="BlackText">Error rate</td><td class="BlackText" align="center">-</td><td class="BlackText" align="right">0.16</td><td class="BlackText" align="right">0.22</td><td class="BlackText" align="right"><span style='visibility:hidden'>0.00</span></td><td class="BlackText" align="right">1.44</td><td class="BlackText" align="right">0.53</td>
+	</tr><tr class="EvenItem">
+		<td title="Dislodge / (Usage - Reject) * 100" class="BlackText">Dislodged rate</td><td class="BlackText" align="center">-</td><td class="BlackText" align="right"><span style='visibility:hidden'>0.00</span></td><td class="BlackText" align="right"><span style='visibility:hidden'>0.00</span></td><td class="BlackText" align="right"><span style='visibility:hidden'>0.00</span></td><td class="BlackText" align="right"><span style='visibility:hidden'>0.00</span></td><td class="BlackText" align="right"><span style='visibility:hidden'>0.00</span></td>
+	</tr><tr>
+		<td title="((Usage - Reject) - (Dislodge + Error)) / (Usage - Reject) * 100" class="BlackText">Success rate</td><td class="BlackText" align="center">-</td><td class="BlackText" align="right" style="color:Red;">99.84</td><td class="BlackText" align="right" style="color:Red;">99.78</td><td class="BlackText" align="right">100.00</td><td class="BlackText" align="right" style="color:Red;">98.56</td><td class="BlackText" align="right" style="color:Red;">99.47</td>
+	</tr>
+</table>
+											</table>
+											</div>
+											</div>
+									
+								<!-- 偙偙傑偱僐儞僥儞僣偱偡乮曇廤屻傕徚偝側偄偱偹両乯 -->
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+		</table>
+		<!-- 僼僢僞乕晹暘偺昞帵 -->
+		
+<table cellspacing="0" cellpadding="0" width="100%" bgcolor="#6699cc" border="0">
+	<tr height="24">
+		<td>
+			<a class="WhiteLink" href="http://www.fuji.co.jp" target="_top">FUJI CORPORATION</a>
+			<font class="WhiteText">&nbsp;|&nbsp;</font>
+			<a class="WhiteLink" href="./Support.aspx" target="_top">Contact</a>
+			<font class="WhiteText">&nbsp;|&nbsp;</font>
+			<a class="WhiteLink" href="./Version.aspx" target="_top">About...</a>
+			<font class="WhiteText">&nbsp;|&nbsp;</font>
+			<a class="WhiteLink" href="./DownLoad.aspx" target="_top">Download</a>
+			<font class="WhiteText">&nbsp;|&nbsp;</font>
+			<a class="WhiteLink" href="./FloorLayout.aspx" target="_blank">Layout</a>
+	<tr>
+		<td class="WhiteText" height="20" nowrap>&copy; FUJI CORPORATION 2003
+	<tr>
+		<td bgcolor="#cccccc"><img height="1" src="data:image/gif;base64,R0lGODlhAQABAIAAAP8zzAAAACH5BAEAAAAALAAAAAABAAEAQAIChFEAOwA=" width="100%">
+</table>
+
+	</form>
+  </body>
+</html>
